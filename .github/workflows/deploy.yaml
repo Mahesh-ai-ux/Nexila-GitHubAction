@@ -1,5 +1,5 @@
 name: Nexila CRM Deployment
-
+# Test
 on:
   push:
     branches:
@@ -58,5 +58,8 @@ jobs:
           docker compose down
 
           docker compose up -d
+<<<<<<< HEAD
 
           # testing the deployment
+=======
+>>>>>>> 2242554562e8f3e0225f05af7c9033fb4fd015f3
