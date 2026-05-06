@@ -58,3 +58,5 @@ jobs:
           docker compose down
 
           docker compose up -d
+
+          # testing the deployment
