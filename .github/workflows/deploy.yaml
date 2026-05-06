@@ -1,65 +1,62 @@
 name: Nexila CRM Deployment
-# Test
+
 on:
   push:
     branches:
       - main
 
 jobs:
-
   deploy:
 
     runs-on: ubuntu-latest
 
     steps:
 
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      # Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Docker Login
-      uses: docker/login-action@v3
+      # Docker Login
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      # Build Backend Image
+      - name: Build Backend Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/nexila-crm-backend:latest ./backend
 
-    - name: Build Backend Image
-      run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/nexila-crm-backend:latest ./backend
+      # Push Backend Image
+      - name: Push Backend Image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/nexila-crm-backend:latest
 
-    - name: Push Backend Image
-      run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/nexila-crm-backend:latest
+      # Build Frontend Image
+      - name: Build Frontend Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/nexila-crm-frontend:latest ./template
 
-    - name: Build Frontend Image
-      run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/nexila-crm-frontend:latest ./template
+      # Push Frontend Image
+      - name: Push Frontend Image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/nexila-crm-frontend:latest
 
-    - name: Push Frontend Image
-      run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/nexila-crm-frontend:latest
+      # Deploy to EC2
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
 
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
 
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/Nexila-GitHubAction
 
-        script: |
+            docker compose pull
 
-          cd ~/Nexila-GitHubAction
+            docker compose down
 
-          git pull origin main
-
-          docker compose pull
-
-          docker compose down
-
-          docker compose up -d
-<<<<<<< HEAD
-
-          # testing the deployment
-=======
->>>>>>> 2242554562e8f3e0225f05af7c9033fb4fd015f3
+            docker compose up -d
